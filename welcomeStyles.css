@@ -1,0 +1,296 @@
+
+.dashboard-container {
+    display: flex;
+    /* width: 80%; */
+    /* max-width: 1440px; */
+    height: 100vh;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Main Content */
+.main-content {
+     flex-grow: 1; 
+     padding-left: 25px; 
+     padding-right: 35px; 
+     padding-top: 50px; 
+     padding-bottom: 50px; 
+     background-color: #FAFCFF;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+/* Inventory Section */
+.inventory h2 {
+    font-size: 18px;
+}
+
+.cards {
+    display: flex;
+    /* gap: 15px; */
+    margin-top: 10px;
+	justify-content:flex-start;
+}
+
+.mainCard{
+    background: white;
+    border-radius: 24px;
+    margin-left: 25px;
+    text-align: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+    background: white;
+    margin: 15px; 
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+    width: 80px;
+    /* margin: 10px 0; */
+}
+
+.cards .card p{
+	
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding-left: 25px;
+padding-bottom: 10px;
+padding-right: 25px;
+padding-top: 10px;
+gap: 8px;
+
+/* width: 294px; */
+/* height: 64px; */
+
+background: #F1F6FF;
+border-radius: 0px 0px 24px 24px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+color: #4A4A68;
+font-weight: 550;
+
+}
+
+.homeIcon{
+	/* Property 1=D-icon_home */
+
+position: absolute;
+width: 27.74px;
+height: 27.45px;
+left: 16px;
+top: 16px;
+
+
+
+/* Vector */
+
+position: absolute;
+left: -0.01%;
+right: 0.02%;
+top: -0.01%;
+bottom: 58.58%;
+
+background: #4A4A68;
+
+
+/* Vector */
+
+position: absolute;
+left: 10.81%;
+right: 10.85%;
+top: 38.29%;
+bottom: 0%;
+
+background: #4A4A68;
+
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+
+
+.in-stock {
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 10px;
+    gap: 4px;
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-bottom: 15px;
+    width: 85px;
+    height: 20px;
+
+    /* display: inline-flex;
+    align-items: center; */
+    background-color: #dbe4f3; /* light blue background */
+    border-radius: 9999px; /* fully rounded */
+    /* padding: 6px 14px; */
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    direction: ltr; 
+  }
+  
+.in-stock .dot {
+    width: 12px;
+    height: 12px;
+    background-color: #97d11b; /* green circle */
+    border-radius: 50%;
+    margin-right: 8px; /* space between dot and text */
+  }
+
+
+.out-of-stock {
+   display: flex;
+   flex-direction: row;
+   justify-content: center;
+   align-items: center;
+   padding: 0px 10px;
+   gap: 4px;
+   margin-top: 10px;
+   margin-right: 10px;
+   margin-bottom: 15px;
+   width: 100px;
+   height: 20px;
+    /* display: inline-flex;
+   align-items: center; */
+   background-color: #dbe4f3; /* light blue background */
+   border-radius: 9999px; /* fully rounded */
+   /* padding: 6px 14px; */
+   font-family: Arial, sans-serif;
+   font-size: 14px;
+   color: black;
+   direction: ltr; 
+}
+  
+.out-of-stock .dot {
+    width: 12px;
+    height: 12px;
+    background-color: #d11b1b; /* red circle */
+    border-radius: 50%;
+    margin-right: 8px; /* space between dot and text */
+  }
+
+
+/* Analytics & Notifications */
+.analytics {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.chart-container, .notifications {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 48%;
+}
+
+/* Ad Card */
+.ad-card {
+    text-align: center;
+}
+
+.ad-card img {
+    width: 50%;
+    border-radius: 10px;
+}
+
+.price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4caf50;
+}
+
+.date {
+    font-size: 12px;
+    color: #666;
+}
+
+.card-ad {
+    display: flex;
+    max-width: 800px;
+    max-height: 250px;
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 10px;
+  }
+  
+  .card-ad-image {
+    flex: 1 1 50%;
+  }
+  
+  .card-ad-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .card-ad-content {
+    flex: 1 1 50%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #f4f7fc;
+  }
+  
+  .card-ad-content h2 {
+    color: #4b4e63;
+    font-size: 22px;
+    margin: 0 0 12px;
+  }
+  
+  .card-ad-content p {
+    color: #4b4e63;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+  
+  .price-badge {
+    display: inline-block;
+    background-color: #e5ebf5;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4b4e63;
+    margin-bottom: 12px;
+    max-width: fit-content;
+  }
+  
+  .price-badge span {
+    font-weight: normal;
+  }
+  
+  .card-ad-content small {
+    font-size: 14px;
+    color: #888;
+  }
+  

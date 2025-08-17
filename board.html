@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>לוח מודעות</title>
+  <link rel="stylesheet" href="board-styles.css">
+      <link rel="stylesheet" href="sidebar-style.css">
+</head>
+<body>
+  <div class="dashboard-container">
+     <aside class="sidebar">
+            <a href="welcome.html" class="menu-item"><span>מסך הבית</span> 🏠</a>
+            <a href="inventory.html" class="menu-item"><span>ניהול מלאי</span> 📦</a>
+            <a href="board.html" class="menu-item active"><span>לוח מודעות</span> 📋</a>
+            <a href="users.html" class="menu-item"><span>נתוני משתמשים</span> 👤</a>
+        </aside>
+
+    <main class="main-content" >
+    <h1>לוח מודעות</h1>
+    
+    <section class="new-announcement" >
+        <h2>צור מודעה חדשה</h2>
+        <div class="create-announcment">                        
+            <form>
+                <label style="color: #0E0E2C;">בחירת משקה</label>
+                <div class="custom-select-wrapper">
+            
+                    <select class="custom-select">
+                        <option>משקה להשוואה</option>
+                    </select>
+                    <span class="icon bottle-icon"></span>
+                    <span class="icon arrow-icon"></span>
+                    <hr />
+                </div>
+            
+            
+                <label style="color: #0E0E2C;">תיאור</label>
+                <input class="rounded-box-full-length" type="text" placeholder="ניתן להכניס עד 8 מילים">
+            
+                <label style="color: #0E0E2C;">סוג מבצע</label>
+                <input class="rounded-box-full-length" type="text" placeholder="מחיר מבצע / אחוז הנחה / x-3 ב-2">
+
+                <div class="input-row">
+                     <label style="color: #0E0E2C;" for="pricetxt">מחיר</label>
+
+                     <label style="color: #0E0E2C; margin-right: 200px;" for="pricetxt">תוקף מבצע</label>
+                </div>
+
+                <div class="input-row">                                                  
+                    <input id="pricetxt" type="text">                                                                     
+                    <input id="starttxt" type="text" placeholder="התחלה">                   
+                    <input type="text" placeholder="סיום">
+                </div>
+            
+                <button class="register-btn" type="submit" style="max-width: 187px; border-radius: 15px;">פרסום</button>
+                </form>
+                
+                <div class="image-upload">
+                    <div class="upload-placeholder"> <img src="uploadimg.png"><span>הוספת תמונה</span></div>
+                </div>
+                </div>
+                </section>
+                
+                <section class="active-announcements" style="margin-top: 20px;">
+                    <h3>מודעות פעילות</h3>
+                
+                    <div class="scroll-container">
+                        <div class="card-ad">
+                            <div class="card-ad-content">
+                                <h2>Carlsberg Luma</h2>
+                                <p>לכבוד סופ״ש סוער מלא<br>
+                                    בקצב וקלאַס הבירה<br>
+                                    הטובה באה לכבוש.
+                                </p>
+                                <div class="price-badge">
+                                    <span>2 ב־</span><strong>100₪</strong>
+                                </div>
+                                <small>תקף עד 30.07</small>
+                            </div>
+                            <div class="card-ad-image">
+                                <img src="wine-glasses.jpg" alt="Wine pouring">
+                            </div>
+                        </div>
+                
+                
+                        <div class="card-ad">
+                            <div class="card-ad-content">
+                                <h2>Carlsberg Luma</h2>
+                                <p>לכבוד סופ״ש סוער מלא<br>
+                                    בקצב וקלאַס הבירה<br>
+                                    הטובה באה לכבוש.
+                                </p>
+                                <div class="price-badge">
+                                    <span>2 ב־</span><strong>100₪</strong>
+                                </div>
+                                <small>תקף עד 30.07</small>
+                            </div>
+                            <div class="card-ad-image">
+                                <img src="wine-glass.jpg" alt="Wine Glass">
+                            </div>
+                        </div>
+                
+                
+                        <div class="card-ad">
+                            <div class="card-ad-content">
+                                <h2>Carlsberg Luma</h2>
+                                <p>לכבוד סופ״ש סוער מלא<br>
+                                    בקצב וקלאַס הבירה<br>
+                                    הטובה באה לכבוש.
+                                </p>
+                                <div class="price-badge">
+                                    <span>2 ב־</span><strong>100₪</strong>
+                                </div>
+                                <small>תקף עד 30.07</small>
+                            </div>
+                            <div class="card-ad-image">
+                                <img src="beer.jpg" alt="Beer">
+                            </div>
+                        </div>
+                
+                
+                    </div>
+                
+                </section>
+    </main>
+  </div>
+</body>
+</html>

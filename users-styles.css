@@ -1,0 +1,136 @@
+body {
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    margin: 0;
+
+}
+
+canvas {
+    max-width: 1200px;
+    max-height: 400px;
+    padding: 0px;
+    margin: 10px;
+    justify-self: center;
+}
+
+.container {
+    display: flex;
+}
+
+
+.main-content {
+    flex: 1;
+    padding-left: 80px;
+    padding-right: 80px;
+    padding-top: 80px; 
+    background-color: #FAFCFF;
+    justify-content: stretch;
+    display: grid;
+    grid-template-rows: 100px;
+    align-content: space-around;
+}
+
+
+h1 {
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 50px;
+    justify-self: center;
+    /* margin-bottom: 20px; */
+}
+
+.tab {
+    color: #A0A0A0;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.tab.active {
+    color: #000;
+}
+
+/* Chart placeholder */
+.chart {
+    height: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Cards */
+.cards {
+    display: flex;
+    gap: 50px;
+    justify-self: center;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    /* flex: 1; */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-width: auto;
+}
+
+.card img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    margin-right: 50px;
+    margin-left: 50px;
+    font-size: 18px;
+    color: #1a1a1a;
+}
+
+.card p {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #2b4c6f;
+}
+
+ .notification {
+    width: 130px;
+    height: 130px;
+    background-color: #f0f5ff; /* light blue circle */
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #566E9C; /* blue icon + text */
+    font-family: Arial, sans-serif;
+    justify-self: center;
+    margin-top: 10px;
+  }
+
+  .notification svg {
+    width: 50px;
+    height: 50px;
+    stroke: #566E9C;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  .notification span {
+    font-size: 36px;
+    font-weight: 500;
+    margin-top: 8px;
+    outline: none;
+  }
+
+  .notification span:focus {
+    border-bottom: 2px solid #566E9C;
+  }

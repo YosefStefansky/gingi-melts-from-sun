@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alco Smart Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">       
+        <div class="right-panel">
+            <div class="login-box">
+                <p class="message">שלום!<br> המערכת נועדה בשבילך לשמר את חווית ההנאה של AlcoSmart ולעדכן אותך בכל מה שקורה עם כל המשתמשים שלך.</p>
+                
+                <h2>התחברות</h2>
+                
+                <div class="input-group">
+                    <input id="username" type="email" placeholder="אימייל">
+                    <span class="icon">📧</span>
+                </div>
+                <div class="input-group">
+                    <input id="password" type="password" placeholder="סיסמא">
+                    <span class="icon">🔒</span>
+                </div>
+                
+                <div class="terms">
+                    <input type="checkbox" id="terms">
+                    <label for="terms">הסכמה נשלחה</label>
+                </div>
+                
+                <button class="register-btn" onclick="login()">התחברות</button>
+                
+                <div class="separator">או</div>
+                
+                <button class="social-btn google">במאמצעות גוגל</button>
+                <button class="social-btn facebook">במאמצעות פייסבוק</button>
+                
+                <p class="signup-text">עדיין לא חלק ממשפחת AlcoSmart? <a href="#">הרשמה</a></p>
+                
+                <button class="join-btn">להצטרפות</button>
+            </div>
+        </div>
+		 <div class="left-panel">
+            <img src="logo.png" alt="Alco Smart Logo" class="logo">
+        </div>
+    </div>
+        <script src="script.js"></script>
+</body>
+</html>

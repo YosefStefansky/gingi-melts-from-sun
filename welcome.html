@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="welcomeStyles.css">
+    <link rel="stylesheet" href="sidebar-style.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <a href="welcome.html" class="menu-item active"><span>מסך הבית</span> 🏠</a>
+            <a href="inventory.html" class="menu-item"><span>ניהול מלאי</span> 📦</a>
+            <a href="board.html" class="menu-item"><span>לוח מודעות</span> 📋</a>
+            <a href="users.html" class="menu-item"><span>נתוני משתמשים</span> 👤</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>ברוך הבא, דוד</h1>
+
+            <!-- Inventory Section -->
+            <section class="inventory">
+                <div class="mainCard">
+                    <h2>ניהול מלאי - עדכונים אחרונים</h2>
+                    <p>עודכן לאחרונה</p>
+                    <div class="cards">
+                        <div class="card">
+                            <div class="in-stock"> <span class="dot"></span>זמין</div>
+                            <img src="wine3.jpg" alt="Wine Bottle">
+                            <p>מיראבל רוזה פרובנס</p>
+                        </div>
+                        <div class="card">
+                            <div class="in-stock"> <span class="dot"></span>זמין</div>
+                            <img src="wine1.jpg" alt="Wine Bottle">
+                            <p>דמרי סבייה כתום אורגני טבעי</p>
+                        </div>
+                        <div class="card">
+                            <div class="out-of-stock"></span><span class="dot"></span>לא זמין</div>
+                            <img src="wine2.jpg" alt="Wine Bottle">
+                            <p>דומיין קפרטין פימפאנט יין אורגני</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Management & Notifications -->
+            <section class="analytics">
+                <div class="chart-container">
+                    <h3>ניהול משתמש</h3>
+                    <p>7 ימים אחרונים</p>
+                    <canvas id="userChart"></canvas>
+                </div>
+
+                <div class="notifications">
+                    <h3>לוח מודעות</h3>
+                    <p>המודעה הכי ניצפת</p>
+                    <div class="card-ad">
+                        <div class="card-ad-content">
+                            <h2>Carlsberg Luma</h2>
+                            <p>לכבוד סופ״ש סוער מלא<br>
+                                בקצב וקלאַס הבירה<br>
+                                הטובה באה לכבוש.
+                            </p>
+                            <div class="price-badge">
+                                <span>2 ב־</span><strong>100₪</strong>
+                            </div>
+                            <small>תקף עד 30.07</small>
+                        </div>
+                        <div class="card-ad-image">
+                            <img src="wine-glasses.jpg" alt="Wine pouring">
+                        </div>
+                    </div>
+                    <!-- <div class="ad-card">
+                        <img src="wine-glasses.jpg" alt="Wine Glasses">
+                        <p><strong>Carlsberg Luma</strong><br>לכבוד סיום ש' שור מלא בקבוק קלאס הבירה <br> התשובה באה לגבש.</p>
+                        <span class="price">2 ב-100₪</span>
+                        <p class="date">תקף עד 30.07</p>
+                    </div> -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
