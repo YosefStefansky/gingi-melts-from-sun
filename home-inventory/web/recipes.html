@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Inventory - Recipes &amp; Menus</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="recipes">
+  <div class="app-shell">
+    <main class="main">
+      <h1>Recipes &amp; Menus</h1>
+      <p class="settings-note">Save recipes with their ingredients, then pick a menu and submit it to auto-fill your shopping list with whatever you don't already have.</p>
+
+      <div class="card">
+        <h3>New recipe</h3>
+        <form id="recipeForm">
+          <div class="inline-form" style="margin-bottom: 12px;">
+            <div class="field">
+              <label for="recipeName">Recipe name</label>
+              <input id="recipeName" required placeholder="e.g. Spaghetti Bolognese">
+            </div>
+            <div class="field">
+              <label for="recipeServings">Servings</label>
+              <input id="recipeServings" type="number" min="1" value="4">
+            </div>
+          </div>
+
+          <label>Ingredients</label>
+          <div id="ingredientRows"></div>
+          <button type="button" class="secondary" id="addIngredientRow" style="margin-bottom: 12px;">+ Add ingredient</button>
+          <br>
+          <button type="submit">Save recipe</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Build a menu</h3>
+        <p class="settings-note">Check off the recipes you're planning to cook, then submit to generate a shopping list for whatever's missing from inventory.</p>
+        <div class="recipe-list" id="recipePickList"></div>
+        <button id="submitMenuBtn" style="margin-top: 12px;">Submit menu &rarr; shopping list</button>
+        <div id="menuResult"></div>
+      </div>
+
+      <div class="section-title">Saved recipes</div>
+      <div id="recipeCards"></div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/recipes.js"></script>
+</body>
+</html>

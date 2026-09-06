@@ -1,0 +1,31 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "name": "Home Pantry",
+          "summary": "Check what's in your fridge, freezer and pantry, and manage your shopping list by voice.",
+          "description": "Home Pantry connects to your household's own Home Inventory app. Ask what you have in stock, add or remove items from your shopping list, log what you bought or used, and turn a planned menu into a shopping list for whatever you're missing.",
+          "examplePhrases": [
+            "Alexa, ask home pantry what's on my shopping list",
+            "Alexa, tell home pantry to add milk to my shopping list",
+            "Alexa, ask home pantry how much chicken I have"
+          ],
+          "keywords": ["shopping list", "inventory", "pantry", "groceries", "kitchen"]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Requires the companion Home Inventory server to be running and reachable at the URL configured in the Lambda's API_BASE_URL environment variable. See home-inventory/alexa-skill/README.md.",
+      "category": "SHOPPING_AND_ORDERING",
+      "distributionCountries": ["US"]
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sourceDir": "lambda"
+        }
+      }
+    },
+    "manifestVersion": "1.0"
+  }
+}

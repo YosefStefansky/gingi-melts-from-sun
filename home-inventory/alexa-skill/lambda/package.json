@@ -1,0 +1,13 @@
+{
+  "name": "home-inventory-alexa-skill",
+  "version": "1.0.0",
+  "description": "Alexa skill Lambda for the Home Inventory & Shopping List app.",
+  "main": "index.js",
+  "scripts": {
+    "package": "rm -f function.zip && npm install --omit=dev && zip -r function.zip index.js lib node_modules package.json"
+  },
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0",
+    "ask-sdk-model": "^1.39.0"
+  }
+}

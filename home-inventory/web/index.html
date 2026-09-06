@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Inventory - Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="dashboard">
+  <div class="app-shell">
+    <main class="main">
+      <h1>Dashboard</h1>
+      <p class="settings-note">What's in the house, what's running low, and what's on the shopping list.</p>
+
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card"><div class="value">-</div><div class="label">Inventory items</div></div>
+        <div class="stat-card"><div class="value">-</div><div class="label">Low stock</div></div>
+        <div class="stat-card"><div class="value">-</div><div class="label">On shopping list</div></div>
+        <div class="stat-card"><div class="value">-</div><div class="label">Saved recipes</div></div>
+      </div>
+
+      <div class="card">
+        <h2>⚠️ Low stock</h2>
+        <div id="lowStockList"><p class="empty-state">Loading...</p></div>
+      </div>
+
+      <div class="card">
+        <h2>🛒 Shopping list (unchecked)</h2>
+        <div id="shoppingPreview"><p class="empty-state">Loading...</p></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

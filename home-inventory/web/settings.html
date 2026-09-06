@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Inventory - Settings</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="settings">
+  <div class="app-shell">
+    <main class="main">
+      <h1>Settings</h1>
+
+      <div class="card">
+        <h3>API key</h3>
+        <p class="settings-note">
+          If the server was started with an <code>API_KEY</code> set (recommended once it's
+          reachable from the internet for Alexa), enter the same key here so this browser can
+          talk to it. Leave blank if the server has no API_KEY configured.
+        </p>
+        <form class="inline-form" id="apiKeyForm">
+          <div class="field">
+            <label for="apiKey">API key</label>
+            <input id="apiKey" placeholder="matches the server's API_KEY">
+          </div>
+          <div class="field">
+            <button type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Server status</h3>
+        <p id="status" class="settings-note">Checking...</p>
+      </div>
+
+      <div class="card">
+        <h3>Alexa</h3>
+        <p class="settings-note">
+          The Alexa skill lives in <code>home-inventory/alexa-skill/</code>. It talks to this
+          same API over HTTPS, so this server needs to be reachable from the internet (deployed
+          somewhere, or tunneled with a tool like ngrok while testing) and the Lambda's
+          <code>API_BASE_URL</code> / <code>API_KEY</code> environment variables need to match
+          what this server is running with. See <code>home-inventory/alexa-skill/README.md</code>
+          for setup steps.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    const input = document.getElementById('apiKey');
+    input.value = localStorage.getItem('homeInventoryApiKey') || '';
+
+    document.getElementById('apiKeyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        localStorage.setItem('homeInventoryApiKey', input.value);
+      } else {
+        localStorage.removeItem('homeInventoryApiKey');
+      }
+      showToast('Saved');
+      checkStatus();
+    });
+
+    async function checkStatus() {
+      const statusEl = document.getElementById('status');
+      try {
+        await api.get('/api/health');
+        statusEl.textContent = '✅ Connected to the API.';
+      } catch (err) {
+        statusEl.textContent = `❌ Could not reach the API: ${err.message}`;
+      }
+    }
+
+    checkStatus();
+  </script>
+</body>
+</html>

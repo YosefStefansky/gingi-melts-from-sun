@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Inventory - Inventory</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="inventory">
+  <div class="app-shell">
+    <main class="main">
+      <div class="page-header">
+        <h1>Inventory</h1>
+      </div>
+      <p class="settings-note">Everything currently in your freezer, fridge, pantry, cabinets, etc.</p>
+
+      <div class="card">
+        <h3>Add an item</h3>
+        <form class="inline-form" id="addForm">
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" required placeholder="e.g. Ground beef">
+          </div>
+          <div class="field">
+            <label for="quantity">Quantity</label>
+            <input id="quantity" type="number" step="any" value="1" required>
+          </div>
+          <div class="field">
+            <label for="unit">Unit</label>
+            <input id="unit" placeholder="lb, box, item..." value="item">
+          </div>
+          <div class="field">
+            <label for="location">Location</label>
+            <input id="location" list="locationOptions" required placeholder="Freezer">
+            <datalist id="locationOptions"></datalist>
+          </div>
+          <div class="field">
+            <label for="category">Category (optional)</label>
+            <input id="category" placeholder="Meat, Produce...">
+          </div>
+          <div class="field">
+            <label for="expiryDate">Expiry (optional)</label>
+            <input id="expiryDate" type="date">
+          </div>
+          <div class="field">
+            <label for="lowStockThreshold">Low stock alert below (optional)</label>
+            <input id="lowStockThreshold" type="number" step="any" placeholder="e.g. 1">
+          </div>
+          <div class="field">
+            <button type="submit">Add item</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="page-header">
+        <div class="inline-form" style="display:flex; gap:10px;">
+          <input id="searchBox" placeholder="Search by name...">
+          <select id="locationFilter">
+            <option value="">All locations</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="inventoryByLocation">
+        <p class="empty-state">Loading...</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/inventory.js"></script>
+</body>
+</html>

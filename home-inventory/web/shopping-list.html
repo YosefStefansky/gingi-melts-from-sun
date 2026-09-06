@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Inventory - Shopping List</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="shopping-list">
+  <div class="app-shell">
+    <main class="main">
+      <h1>Shopping List</h1>
+
+      <div class="card">
+        <h3>Add an item</h3>
+        <form class="inline-form" id="addForm">
+          <div class="field">
+            <label for="name">Item</label>
+            <input id="name" required placeholder="e.g. Milk">
+          </div>
+          <div class="field">
+            <label for="quantity">Quantity</label>
+            <input id="quantity" type="number" step="any" value="1">
+          </div>
+          <div class="field">
+            <label for="unit">Unit</label>
+            <input id="unit" placeholder="item, gallon..." value="item">
+          </div>
+          <div class="field">
+            <label for="note">Note (optional)</label>
+            <input id="note" placeholder="brand, size...">
+          </div>
+          <div class="field">
+            <button type="submit">Add to list</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="page-header">
+        <h3 style="margin:0;">To buy</h3>
+        <button class="secondary" id="clearCheckedBtn">Clear checked items</button>
+      </div>
+      <div id="listContainer"><p class="empty-state">Loading...</p></div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/shopping-list.js"></script>
+</body>
+</html>
