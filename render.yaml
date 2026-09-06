@@ -1,0 +1,22 @@
+# Render Blueprint - deploys the Home Inventory API as a web service.
+#
+# Usage: in the Render dashboard, New -> Blueprint -> connect this repo
+# (branch: claude/shopping-inventory-alexa-rnq5fe, or main once merged) ->
+# Render finds this file and proposes the service below -> Apply.
+#
+# The service serves both the REST API (/api/*) and the web UI (everything
+# else) from one Node process - see home-inventory/server/src/server.js.
+services:
+  - type: web
+    name: home-inventory-api
+    env: node
+    plan: free
+    rootDir: home-inventory/server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: API_KEY
+        generateValue: true
