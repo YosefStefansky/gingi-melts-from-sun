@@ -93,10 +93,26 @@ and paste the ARN from step 2. Save.
 Use the **Test** tab in the developer console (enable testing for
 "Development"), or just talk to any Echo device signed into the same Amazon
 account used to build the skill - it shows up automatically without needing
-to publish it. Try: *"Alexa, open home pantry"*.
+to publish it. Try: *"Alexa, ask home pantry what's on my shopping list"*
+(see the note on launch phrasing below - lead with "ask"/"tell", not "open").
 
 ## Known limitations (v1)
 
+- **Lead with "ask"/"tell", not "open"**: on at least one real device we saw
+  *"Alexa, open home pantry"* fail with "Home Pantry is not supported on
+  this device" while every setting (locale, marketplace, Availability,
+  interfaces, build, enablement) checked out fine - and *"Alexa, ask home
+  pantry what's on my shopping list"* worked immediately on the same device
+  right after. That's consistent with Alexa's NLU occasionally
+  mis-resolving a bare "open <generic word>" launch phrase (invocation
+  names built around very common words like "home" are more prone to this)
+  toward a different skill category instead of cleanly hitting this skill's
+  `LaunchRequest`. Direct intent phrasing ("ask ... to ...", "tell ... to
+  ...") sidesteps the ambiguity entirely and is what every example phrase
+  and the Help response already use. If this bothers you, the fix is to
+  pick a more distinctive invocation name (update
+  `interactionModels/custom/en-US.json`'s `invocationName` and rebuild) -
+  not a code change.
 - **Item/location/unit vocabulary**: `ItemName`, `LOCATION_TYPE`, and
   `UNIT_TYPE` are custom slot types with a starter list of common grocery
   items, storage locations, and units
