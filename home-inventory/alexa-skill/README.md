@@ -7,20 +7,30 @@ voice from an Echo device.
 Alexa does not support Hebrew as a skill language, so this skill (and its
 interaction model) is in English (`en-US`).
 
+**Invocation name vs. display name**: what you say to Alexa is the
+`invocationName` in `skill-package/interactionModels/custom/en-US.json`
+(currently "shopping assistant") - changing it is a pure interaction-model
+edit (JSON Editor -> Save -> Build Model), no Lambda code or re-upload
+needed. That's separate from the skill's *display* name ("Home Pantry" in
+`skill-package/skill.json` and this file's title) shown in the Alexa app and
+spoken by the Lambda's welcome message (`SKILL_NAME` in `lambda/index.js`)
+- those are cosmetic/branding and only need updating if you want everything
+to match.
+
 ## What it can do
 
 | Say...                                                              | Does |
 |-----------------------------------------------------------------------|------|
-| "Alexa, ask home pantry what's on my shopping list"                  | Reads your unchecked shopping list items |
-| "Alexa, tell home pantry to add milk to my shopping list"            | Adds an item on demand |
-| "Alexa, tell home pantry to remove milk from my shopping list"       | Removes an item |
-| "Alexa, tell home pantry to clear my shopping list"                  | Clears items already checked off |
-| "Alexa, ask home pantry how much chicken I have"                     | Reads back inventory quantities/locations |
-| "Alexa, tell home pantry I bought two pounds of ground beef"         | Adds/increments inventory (defaults to Pantry if no location given) |
-| "Alexa, tell home pantry we're out of eggs"                          | Decrements inventory |
-| "Alexa, tell home pantry I'm planning to cook spaghetti bolognese"   | Looks up that recipe and adds whatever ingredients you're missing to the shopping list |
+| "Alexa, ask shopping assistant what's on my shopping list"                  | Reads your unchecked shopping list items |
+| "Alexa, tell shopping assistant to add milk to my shopping list"            | Adds an item on demand |
+| "Alexa, tell shopping assistant to remove milk from my shopping list"       | Removes an item |
+| "Alexa, tell shopping assistant to clear my shopping list"                  | Clears items already checked off |
+| "Alexa, ask shopping assistant how much chicken I have"                     | Reads back inventory quantities/locations |
+| "Alexa, tell shopping assistant I bought two pounds of ground beef"         | Adds/increments inventory (defaults to Pantry if no location given) |
+| "Alexa, tell shopping assistant we're out of eggs"                          | Decrements inventory |
+| "Alexa, tell shopping assistant I'm planning to cook spaghetti bolognese"   | Looks up that recipe and adds whatever ingredients you're missing to the shopping list |
 
-Run `Alexa, open home pantry` for the welcome message, or `Alexa, ask home
+Run `Alexa, open shopping assistant` for the welcome message, or `Alexa, ask home
 pantry for help` any time for a spoken list of things you can say.
 
 ## Architecture
@@ -93,13 +103,13 @@ and paste the ARN from step 2. Save.
 Use the **Test** tab in the developer console (enable testing for
 "Development"), or just talk to any Echo device signed into the same Amazon
 account used to build the skill - it shows up automatically without needing
-to publish it. Try: *"Alexa, ask home pantry what's on my shopping list"*
+to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
 (see the note on launch phrasing below - lead with "ask"/"tell", not "open").
 
 ## Known limitations (v1)
 
 - **Lead with "ask"/"tell", not "open"**: on at least one real device we saw
-  *"Alexa, open home pantry"* fail with "Home Pantry is not supported on
+  *"Alexa, open shopping assistant"* fail with "Home Pantry is not supported on
   this device" while every setting (locale, marketplace, Availability,
   interfaces, build, enablement) checked out fine - and *"Alexa, ask home
   pantry what's on my shopping list"* worked immediately on the same device

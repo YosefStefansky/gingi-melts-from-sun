@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "home pantry",
+      "invocationName": "shopping assistant",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
