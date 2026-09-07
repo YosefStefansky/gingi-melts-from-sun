@@ -59,6 +59,30 @@ function describeQuantity(quantity, unit, name) {
   return `${quantity} ${pluralize(quantity, unit)} of ${name}`;
 }
 
+// Without an explicit reprompt, Alexa closes the session after a single
+// exchange - you'd have to say "Alexa, tell shopping assistant..." again
+// for every command. This keeps the mic open (shouldEndSession: false) with
+// a reprompt so multiple commands can be chained in one conversation; pass
+// a specific repromptOutput (usually the same question again) for
+// clarification turns, otherwise it defaults to a generic "anything else?".
+function respond(handlerInput, speakOutput, repromptOutput = 'Anything else?') {
+  return handlerInput.responseBuilder
+    .speak(speakOutput)
+    .reprompt(repromptOutput)
+    .withShouldEndSession(false)
+    .getResponse();
+}
+
+// For turns that should end the conversation (goodbye, unrecoverable
+// errors): no reprompt, and shouldEndSession explicit rather than relying
+// on the SDK's default.
+function respondAndEndSession(handlerInput, speakOutput) {
+  return handlerInput.responseBuilder
+    .speak(speakOutput)
+    .withShouldEndSession(true)
+    .getResponse();
+}
+
 // The backend (Render free tier) can be asleep and take 20-50s to wake -
 // far longer than Alexa's ~8s response budget - so nothing here can just
 // wait for it to fully come up. Instead this fires a short, bounded request
@@ -100,7 +124,7 @@ const LaunchRequestHandler = {
       "add or remove items, check what's in your pantry or freezer, or say " +
       "you're planning to cook a recipe to build a shopping list for it. " +
       'What would you like to do?';
-    return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput, speakOutput);
   }
 };
 
@@ -116,7 +140,10 @@ const WakeUpIntentHandler = {
     const speakOutput = awake
       ? "The pantry server's already up and ready to go."
       : "Okay, waking up the pantry server now. Give it about thirty seconds, then try your request again.";
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    // Deliberately ends the session rather than staying open: if it's still
+    // waking up, there's nothing useful to say next until that finishes, and
+    // an open mic here would just invite a too-early retry.
+    return respondAndEndSession(handlerInput, speakOutput);
   }
 };
 
@@ -131,7 +158,7 @@ const AddToShoppingListIntentHandler = {
     const itemName = slotValue(handlerInput, 'ItemName');
     if (!itemName) {
       const speakOutput = "Sorry, I didn't catch what to add. What would you like to add to your shopping list?";
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const quantity = slotNumber(handlerInput, 'Quantity', 1);
@@ -140,7 +167,7 @@ const AddToShoppingListIntentHandler = {
     await apiClient.addShoppingListItem({ name: itemName, quantity, unit, source: 'manual' });
 
     const speakOutput = `I added ${describeQuantity(quantity, unit, itemName)} to your shopping list.`;
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput);
   }
 };
 
@@ -155,9 +182,7 @@ const ReadShoppingListIntentHandler = {
     const list = await apiClient.listShoppingList(false);
 
     if (list.length === 0) {
-      return handlerInput.responseBuilder
-        .speak('Your shopping list is empty.')
-        .getResponse();
+      return respond(handlerInput, 'Your shopping list is empty.');
     }
 
     const MAX_SPOKEN = 15;
@@ -171,7 +196,7 @@ const ReadShoppingListIntentHandler = {
       `You have ${list.length} ${list.length === 1 ? 'item' : 'items'} on your shopping list: ` +
       `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`;
 
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput);
   }
 };
 
@@ -186,20 +211,16 @@ const RemoveFromShoppingListIntentHandler = {
     const itemName = slotValue(handlerInput, 'ItemName');
     if (!itemName) {
       const speakOutput = "Sorry, which item should I remove from your shopping list?";
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const matches = await apiClient.findShoppingListItem(itemName);
     if (matches.length === 0) {
-      return handlerInput.responseBuilder
-        .speak(`I couldn't find ${itemName} on your shopping list.`)
-        .getResponse();
+      return respond(handlerInput, `I couldn't find ${itemName} on your shopping list.`);
     }
 
     await apiClient.removeShoppingListItem(matches[0].id);
-    return handlerInput.responseBuilder
-      .speak(`I removed ${itemName} from your shopping list.`)
-      .getResponse();
+    return respond(handlerInput, `I removed ${itemName} from your shopping list.`);
   }
 };
 
@@ -212,9 +233,7 @@ const ClearShoppingListIntentHandler = {
   },
   async handle(handlerInput) {
     await apiClient.clearCheckedItems();
-    return handlerInput.responseBuilder
-      .speak("I've cleared the checked-off items from your shopping list.")
-      .getResponse();
+    return respond(handlerInput, "I've cleared the checked-off items from your shopping list.");
   }
 };
 
@@ -229,23 +248,19 @@ const CheckInventoryIntentHandler = {
     const itemName = slotValue(handlerInput, 'ItemName');
     if (!itemName) {
       const speakOutput = 'Sorry, what item did you want to check?';
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const matches = await apiClient.lookupInventory(itemName);
     if (matches.length === 0) {
-      return handlerInput.responseBuilder
-        .speak(`You don't have any ${itemName} in your inventory.`)
-        .getResponse();
+      return respond(handlerInput, `You don't have any ${itemName} in your inventory.`);
     }
 
     const byLocation = matches
       .map((i) => `${i.quantity} ${pluralize(i.quantity, i.unit)} in the ${i.location}`)
       .join(', and ');
 
-    return handlerInput.responseBuilder
-      .speak(`You have ${byLocation}.`)
-      .getResponse();
+    return respond(handlerInput, `You have ${byLocation}.`);
   }
 };
 
@@ -260,7 +275,7 @@ const AddInventoryItemIntentHandler = {
     const itemName = slotValue(handlerInput, 'ItemName');
     if (!itemName) {
       const speakOutput = 'Sorry, what item did you want to add to your inventory?';
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const quantity = slotNumber(handlerInput, 'Quantity', 1);
@@ -274,7 +289,7 @@ const AddInventoryItemIntentHandler = {
       : " I put it in the pantry since you didn't say where - you can move it in the app.";
     const speakOutput = `Got it, added ${describeQuantity(quantity, unit, itemName)} to the ${location}.${locationNote}`;
 
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput);
   }
 };
 
@@ -289,14 +304,12 @@ const UseInventoryItemIntentHandler = {
     const itemName = slotValue(handlerInput, 'ItemName');
     if (!itemName) {
       const speakOutput = 'Sorry, which item did you use?';
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const matches = await apiClient.lookupInventory(itemName);
     if (matches.length === 0) {
-      return handlerInput.responseBuilder
-        .speak(`I couldn't find ${itemName} in your inventory.`)
-        .getResponse();
+      return respond(handlerInput, `I couldn't find ${itemName} in your inventory.`);
     }
 
     // If it's stocked in more than one place, take it from wherever there's
@@ -311,7 +324,7 @@ const UseInventoryItemIntentHandler = {
         ? `Okay, you're all out of ${itemName} now.`
         : `Okay, you have ${updated.quantity} ${pluralize(updated.quantity, updated.unit)} of ${itemName} left in the ${updated.location}.`;
 
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput);
   }
 };
 
@@ -326,25 +339,22 @@ const GenerateShoppingListFromMenuIntentHandler = {
     const recipeName = slotValue(handlerInput, 'RecipeName');
     if (!recipeName) {
       const speakOutput = 'Sorry, what recipe are you planning to make?';
-      return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+      return respond(handlerInput, speakOutput, speakOutput);
     }
 
     const matches = await apiClient.lookupRecipe(recipeName);
     if (matches.length === 0) {
-      return handlerInput.responseBuilder
-        .speak(
-          `I couldn't find a recipe called ${recipeName}. You can add recipes from the Home Inventory website.`
-        )
-        .getResponse();
+      return respond(
+        handlerInput,
+        `I couldn't find a recipe called ${recipeName}. You can add recipes from the Home Inventory website.`
+      );
     }
 
     const recipe = matches[0];
     const result = await apiClient.submitMenu([recipe.id]);
 
     if (result.added.length === 0) {
-      return handlerInput.responseBuilder
-        .speak(`Good news - you already have everything you need for ${recipe.name}.`)
-        .getResponse();
+      return respond(handlerInput, `Good news - you already have everything you need for ${recipe.name}.`);
     }
 
     const MAX_SPOKEN = 12;
@@ -358,7 +368,7 @@ const GenerateShoppingListFromMenuIntentHandler = {
       `I added what you're missing for ${recipe.name} to your shopping list: ` +
       `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`;
 
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput);
   }
 };
 
@@ -377,7 +387,7 @@ const HelpIntentHandler = {
       "'I'm planning to cook spaghetti bolognese' to build a shopping list " +
       "from a recipe, or 'wake up' if the server's been asleep and you want " +
       "to warm it up before asking for anything else.";
-    return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput, speakOutput);
   }
 };
 
@@ -390,7 +400,7 @@ const CancelAndStopIntentHandler = {
     );
   },
   handle(handlerInput) {
-    return handlerInput.responseBuilder.speak('Goodbye!').getResponse();
+    return respondAndEndSession(handlerInput, 'Goodbye!');
   }
 };
 
@@ -405,7 +415,7 @@ const FallbackIntentHandler = {
     const speakOutput =
       "Sorry, I didn't understand that. You can ask what's on your shopping list, " +
       'add an item, or check what you have in stock.';
-    return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+    return respond(handlerInput, speakOutput, speakOutput);
   }
 };
 
@@ -426,7 +436,7 @@ const ErrorHandler = {
     console.error(`Error handling request: ${error.stack || error}`);
     const speakOutput =
       "Sorry, I'm having trouble reaching your home inventory system right now. Please try again in a moment.";
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return respondAndEndSession(handlerInput, speakOutput);
   }
 };
 

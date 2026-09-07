@@ -30,8 +30,15 @@ to match.
 | "Alexa, tell shopping assistant we're out of eggs"                          | Decrements inventory |
 | "Alexa, tell shopping assistant I'm planning to cook spaghetti bolognese"   | Looks up that recipe and adds whatever ingredients you're missing to the shopping list |
 
-Run `Alexa, open shopping assistant` for the welcome message, or `Alexa, ask home
-pantry for help` any time for a spoken list of things you can say.
+Run `Alexa, open shopping assistant` for the welcome message, or `Alexa, ask
+shopping assistant for help` any time for a spoken list of things you can
+say.
+
+**The session stays open between commands** - every response ends with a
+follow-up prompt (e.g. "anything else?") instead of closing, so you can keep
+going without saying "Alexa, tell shopping assistant" again each time: "add
+milk"... *(pause)* ..."add eggs"... *(pause)* ..."what's on my list". Say
+"stop" or "cancel", or just stay quiet, to end the conversation.
 
 ## Architecture
 
