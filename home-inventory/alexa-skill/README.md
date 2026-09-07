@@ -115,6 +115,16 @@ to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
 
 ## Known limitations (v1)
 
+- **Always name the skill explicitly - "tell shopping assistant to..." /
+  "ask shopping assistant..."** - never a bare command like "Alexa, add milk
+  to my shopping list" or "Alexa, add milk to the freezer". Alexa has its
+  own built-in native shopping list (separate from any skill, viewable in
+  the Alexa app under More -> Lists), and it has priority for generic
+  add-to-shopping-list phrasing whenever a skill isn't explicitly named -
+  the request never reaches this skill at all, so nothing is broken or lost
+  in the app, it's just in the wrong place. If something ends up there by
+  mistake, re-add it through the skill with the explicit phrasing and
+  delete it from Alexa's native list afterward.
 - **Lead with "ask"/"tell", not "open"**: on at least one real device we saw
   *"Alexa, open shopping assistant"* fail with "Home Pantry is not supported on
   this device" while every setting (locale, marketplace, Availability,
