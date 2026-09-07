@@ -20,3 +20,13 @@ services:
         value: "22"
       - key: API_KEY
         generateValue: true
+      # Free-tier Render disk doesn't survive redeploys or sleep/wake
+      # cycles, so data needs to live off-box: free Upstash Redis
+      # (https://console.upstash.com) via its REST API. Create a database
+      # there, open its "REST API" section, and paste the two values it
+      # shows (Render will prompt for these since they're not templated
+      # here) - see home-inventory/server/.env.example for details.
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false

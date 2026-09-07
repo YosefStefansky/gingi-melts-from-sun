@@ -28,7 +28,30 @@ npm start
 
 Then open http://localhost:3000 - the dashboard, inventory, recipes/menus,
 and shopping list pages are all there. Data is stored in
-`server/data/db.json` (created automatically, gitignored).
+`server/data/db.json` (created automatically, gitignored) unless
+`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are set (see
+**Deploying** below), in which case it's stored there instead.
+
+## Deploying (Render)
+
+`render.yaml` at the repo root is a Render Blueprint: Render dashboard ->
+**New** -> **Blueprint** -> connect this repo -> it detects the file and
+proposes a free web service. Two things to know:
+
+- **Persistence needs Upstash Redis.** Render's free-tier disk doesn't
+  survive redeploys or the service sleeping and waking back up, so local
+  JSON-file storage isn't durable there. Create a free database at
+  [console.upstash.com](https://console.upstash.com) (no credit card,
+  doesn't expire), open its "REST API" section, and paste the two values it
+  shows into the `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+  environment variables Render prompts for during the Blueprint setup (or
+  add them afterward under the service's Environment tab - either way, the
+  app picks them up automatically and switches off the local file).
+- **Free-tier cold starts.** A free Render web service sleeps after ~15 min
+  idle and can take 20-50 seconds to wake on the next request - fine for the
+  web UI (the page just takes a moment to load), but longer than Alexa's
+  response budget, so the *first* voice command after an idle period can
+  fail. The $7/mo Starter plan removes this by not sleeping.
 
 ## How the "menu → shopping list" flow works
 
@@ -75,5 +98,8 @@ itself.
   matches.
 - No unit conversion - "2 lb" of something won't match "32 oz" of the same
   thing. Pick one unit per item and stick with it.
-- Data lives in one JSON file (`server/data/db.json`). Fine for a household;
-  back it up like any other file you care about.
+- Data lives as one JSON object - either a local file (`server/data/db.json`)
+  or, when configured, one Upstash Redis key. Fine for a household's worth of
+  data; there's no need to back it up beyond whatever the hosting platform
+  or Upstash already does, but it's not built for high write volume or many
+  concurrent households.
