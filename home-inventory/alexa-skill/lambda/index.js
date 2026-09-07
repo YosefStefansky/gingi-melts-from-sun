@@ -59,17 +59,64 @@ function describeQuantity(quantity, unit, name) {
   return `${quantity} ${pluralize(quantity, unit)} of ${name}`;
 }
 
+// The backend (Render free tier) can be asleep and take 20-50s to wake -
+// far longer than Alexa's ~8s response budget - so nothing here can just
+// wait for it to fully come up. Instead this fires a short, bounded request
+// that's enough to make the host start booting, gives up quickly, and lets
+// the user's *next* utterance land on an already-warm (or at least warming)
+// server.
+async function pingHealth(timeoutMs) {
+  const baseUrl = process.env.API_BASE_URL;
+  if (!baseUrl) return false;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/health`, {
+      signal: controller.signal
+    });
+    return res.ok;
+  } catch {
+    // Timed out or errored - the request still reached the host and kicked
+    // off its wake-up, we just didn't wait around for the reply.
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
+    // Fire-and-bounded-wait so "Alexa, open home pantry" also nudges a
+    // sleeping server awake while the welcome message plays, without
+    // risking Alexa's own response timeout if the server is slow.
+    await pingHealth(2500);
+
     const speakOutput =
       `Welcome to ${SKILL_NAME}. You can ask what's on your shopping list, ` +
       "add or remove items, check what's in your pantry or freezer, or say " +
       "you're planning to cook a recipe to build a shopping list for it. " +
       'What would you like to do?';
     return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
+  }
+};
+
+const WakeUpIntentHandler = {
+  canHandle(handlerInput) {
+    return (
+      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
+      Alexa.getIntentName(handlerInput.requestEnvelope) === 'WakeUpIntent'
+    );
+  },
+  async handle(handlerInput) {
+    const awake = await pingHealth(3000);
+    const speakOutput = awake
+      ? "The pantry server's already up and ready to go."
+      : "Okay, waking up the pantry server now. Give it about thirty seconds, then try your request again.";
+    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
   }
 };
 
@@ -326,8 +373,10 @@ const HelpIntentHandler = {
     const speakOutput =
       "Here's what you can ask me: 'add milk to my shopping list', " +
       "'what's on my shopping list', 'how much chicken do I have', " +
-      "'I bought two pounds of ground beef', 'we're out of eggs', or " +
-      "'I'm planning to cook spaghetti bolognese' to build a shopping list from a recipe.";
+      "'I bought two pounds of ground beef', 'we're out of eggs', " +
+      "'I'm planning to cook spaghetti bolognese' to build a shopping list " +
+      "from a recipe, or 'wake up' if the server's been asleep and you want " +
+      "to warm it up before asking for anything else.";
     return handlerInput.responseBuilder.speak(speakOutput).reprompt(speakOutput).getResponse();
   }
 };
@@ -384,6 +433,7 @@ const ErrorHandler = {
 exports.handler = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
+    WakeUpIntentHandler,
     AddToShoppingListIntentHandler,
     ReadShoppingListIntentHandler,
     RemoveFromShoppingListIntentHandler,

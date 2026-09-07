@@ -135,6 +135,19 @@
           ]
         },
         {
+          "name": "WakeUpIntent",
+          "slots": [],
+          "samples": [
+            "wake up",
+            "wake up the server",
+            "wake up the pantry server",
+            "warm up",
+            "warm up the server",
+            "wake up my pantry",
+            "get ready"
+          ]
+        },
+        {
           "name": "GenerateShoppingListFromMenuIntent",
           "slots": [
             { "name": "RecipeName", "type": "AMAZON.SearchQuery" }
