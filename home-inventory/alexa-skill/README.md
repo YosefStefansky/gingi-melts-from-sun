@@ -134,9 +134,16 @@ to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
   `UNIT_TYPE` are custom slot types with a starter list of common grocery
   items, storage locations, and units
   (`skill-package/interactionModels/custom/en-US.json`). Alexa's speech
-  recognition is much more reliable for words in that list. If you regularly
-  buy something unusual, add it to the `ITEM_TYPE` values and rebuild the
-  interaction model.
+  recognition is much more reliable for words in that list; an item that's
+  *not* on it can not just fail to add correctly but get silently
+  misrouted to a different intent entirely (e.g. "add hot dogs to freezer"
+  landing on the shopping list instead of inventory) rather than erroring
+  out. If you regularly buy something unusual, add it to the `ITEM_TYPE`
+  values and rebuild the interaction model.
+- **Say "to the {location}" / "in the {location}"**, not just
+  "to {location}" - `AddInventoryItemIntent` now accepts both, but the
+  "the" phrasing is the one closest to the intent's other sample
+  utterances and least likely to be misheard as a different intent.
 - **Recipe names** use `AMAZON.SearchQuery`, which is open vocabulary but
   only reliable when it's the only slot in the utterance (already the case
   here). The Lambda fuzzy-matches whatever Alexa heard against your saved
