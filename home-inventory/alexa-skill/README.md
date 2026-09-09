@@ -17,9 +17,40 @@ spoken by the Lambda's welcome message (`SKILL_NAME` in `lambda/index.js`)
 - those are cosmetic/branding and only need updating if you want everything
 to match.
 
+## How it understands you
+
+Alexa's own speech-to-intent matching is a fixed grammar: every phrasing has
+to be pre-declared, and every item/location word has to be in a fixed
+vocabulary list. That was the source of most of the early bugs in this
+skill (missing "the", items outside the list silently landing on the wrong
+list, and so on). This skill no longer uses that approach for commands.
+
+Instead, the interaction model has exactly one content intent
+(`NaturalLanguageIntent`, a single `AMAZON.SearchQuery` slot with no carrier
+words) that captures whatever Alexa transcribed, verbatim, and hands it to
+**Claude Haiku 4.5** (`lambda/lib/llm.js`) to decide what you meant. Claude
+picks one of eight tools (add/remove/read the shopping list, clear checked
+items, check inventory, add/use an inventory item, build a shopping list
+from a recipe) with the right arguments, or - if it's genuinely unclear -
+asks a short clarifying question instead of guessing, which the skill
+speaks back and keeps listening for your answer to (a couple of turns of
+conversational memory ride in the Alexa session, not stored anywhere
+server-side).
+
+This needs an `ANTHROPIC_API_KEY` on the Lambda (see **Deploying** below) -
+get one free to start at [console.anthropic.com](https://console.anthropic.com).
+Each command costs a fraction of a cent (Haiku 4.5 pricing) and adds
+roughly half a second to a couple of seconds of latency on top of whatever
+the backend call takes - worth knowing since Alexa only waits about 8
+seconds total for a response, on top of any Render cold-start delay (see
+**Architecture** below).
+
 ## What it can do
 
-| Say...                                                              | Does |
+Say it in plain English - there's no fixed phrasing to match anymore.
+Examples:
+
+| Say something like...                                              | Does |
 |-----------------------------------------------------------------------|------|
 | "Alexa, ask shopping assistant what's on my shopping list"                  | Reads your unchecked shopping list items |
 | "Alexa, tell shopping assistant to add milk to my shopping list"            | Adds an item on demand |
@@ -45,13 +76,17 @@ milk"... *(pause)* ..."add eggs"... *(pause)* ..."what's on my list". Say
 ```
 Echo device --> Alexa service --> this skill's Lambda (lambda/index.js)
                                           |
+                                          |--> Claude (lambda/lib/llm.js) - decide what to do
+                                          |
                                           v
                           Home Inventory REST API (../server)
 ```
 
-The Lambda is a thin translator: it turns Alexa intents into calls against
-the same REST API the web UI uses (`server/src/routes/*`), and turns the
-JSON responses back into speech. It holds no data of its own.
+The Lambda calls Claude once per command to turn what you said into one
+structured action, then calls the same REST API the web UI uses
+(`server/src/routes/*`) to carry it out, and composes the spoken
+confirmation itself (no second call to Claude, to keep latency down). It
+holds no data of its own.
 
 **This means your Home Inventory server has to be reachable from the
 internet** (Lambda can't reach `localhost` on your machine). Options:
@@ -69,9 +104,10 @@ key, so random people can't hit your household's inventory API.
 ## Deploying
 
 You'll need an [Amazon Developer account](https://developer.amazon.com/alexa/console/ask)
-(free) and an AWS account for the Lambda. There's no `ask-cli` config
-committed here, so the steps below use the consoles directly - swap in
-`ask deploy` if you have the ASK CLI set up and prefer that.
+(free), an AWS account for the Lambda, and an
+[Anthropic API key](https://console.anthropic.com). There's no `ask-cli`
+config committed here, so the steps below use the consoles directly - swap
+in `ask deploy` if you have the ASK CLI set up and prefer that.
 
 ### 1. Create the skill
 
@@ -96,8 +132,9 @@ committed here, so the steps below use the consoles directly - swap in
 3. Set environment variables on the function (Configuration → Environment variables):
    - `API_BASE_URL` - the public URL of your Home Inventory server, e.g. `https://pantry.example.com`
    - `API_KEY` - must match the server's `API_KEY` (leave both unset only for local testing)
+   - `ANTHROPIC_API_KEY` - from [console.anthropic.com](https://console.anthropic.com)
 4. Configuration → General configuration: bump the timeout to ~10s (default 3s
-   can be tight for a cold start + an outbound HTTPS call).
+   can be tight for a cold backend wake-up plus the Claude call).
 5. Add an **Alexa Skills Kit** trigger to the function. Copy the function's ARN.
 
 ### 3. Connect the skill to the Lambda
@@ -115,6 +152,20 @@ to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
 
 ## Known limitations (v1)
 
+- **LLM latency stacks with backend cold-start latency.** Each command now
+  costs one call to Claude (typically well under a second for Haiku 4.5, but
+  not guaranteed) *in addition to* whatever the backend call takes. If the
+  Render server is also asleep, the two delays add up and can exceed
+  Alexa's ~8 second response budget. Say "wake up" before a real command
+  after any idle period (see the main project README) to keep these from
+  compounding.
+- **A clarifying question consumes a turn.** When Claude can't tell what you
+  meant, it asks instead of guessing - which is usually a better outcome
+  than silently doing the wrong thing, but means an ambiguous request takes
+  two exchanges instead of one. If this happens a lot for a particular
+  phrasing, it's worth tightening the tool descriptions/system prompt in
+  `lambda/lib/llm.js` rather than working around it by rephrasing every
+  time.
 - **Always name the skill explicitly - "tell shopping assistant to..." /
   "ask shopping assistant..."** - never a bare command like "Alexa, add milk
   to my shopping list" or "Alexa, add milk to the freezer". Alexa has its
@@ -140,24 +191,10 @@ to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
   pick a more distinctive invocation name (update
   `interactionModels/custom/en-US.json`'s `invocationName` and rebuild) -
   not a code change.
-- **Item/location/unit vocabulary**: `ItemName`, `LOCATION_TYPE`, and
-  `UNIT_TYPE` are custom slot types with a starter list of common grocery
-  items, storage locations, and units
-  (`skill-package/interactionModels/custom/en-US.json`). Alexa's speech
-  recognition is much more reliable for words in that list; an item that's
-  *not* on it can not just fail to add correctly but get silently
-  misrouted to a different intent entirely (e.g. "add hot dogs to freezer"
-  landing on the shopping list instead of inventory) rather than erroring
-  out. If you regularly buy something unusual, add it to the `ITEM_TYPE`
-  values and rebuild the interaction model.
-- **Say "to the {location}" / "in the {location}"**, not just
-  "to {location}" - `AddInventoryItemIntent` now accepts both, but the
-  "the" phrasing is the one closest to the intent's other sample
-  utterances and least likely to be misheard as a different intent.
-- **Recipe names** use `AMAZON.SearchQuery`, which is open vocabulary but
-  only reliable when it's the only slot in the utterance (already the case
-  here). The Lambda fuzzy-matches whatever Alexa heard against your saved
-  recipe names server-side.
+- **Recipe names** are matched fuzzily against your saved recipes
+  server-side (`build_shopping_list_from_recipe` in `lambda/lib/llm.js` +
+  `lib/matching.js` on the server) - reasonably tolerant of how you phrase a
+  recipe's name, but it still has to be a recipe you've actually saved.
 - **"Clear my shopping list"** only clears items already checked off, not
   everything on the list - a safety measure so a misheard command can't
   wipe out an active list. Delete individual items by name, or use the web

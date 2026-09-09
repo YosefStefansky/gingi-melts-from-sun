@@ -15,7 +15,7 @@
         }
       },
       "isAvailableWorldwide": true,
-      "testingInstructions": "Requires the companion Home Inventory server to be running and reachable at the URL configured in the Lambda's API_BASE_URL environment variable. See home-inventory/alexa-skill/README.md.",
+      "testingInstructions": "Requires the companion Home Inventory server to be running and reachable at the URL configured in the Lambda's API_BASE_URL environment variable, and an ANTHROPIC_API_KEY on the Lambda (commands are interpreted by Claude, not a fixed phrase grammar). See home-inventory/alexa-skill/README.md.",
       "category": "SHOPPING_AND_ORDERING"
     },
     "apis": {

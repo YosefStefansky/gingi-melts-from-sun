@@ -1,17 +1,12 @@
 const Alexa = require('ask-sdk-core');
 const apiClient = require('./lib/apiClient');
+const { interpretUtterance } = require('./lib/llm');
 
 const SKILL_NAME = 'Home Pantry';
 
 function slotValue(handlerInput, slotName) {
   const value = Alexa.getSlotValue(handlerInput.requestEnvelope, slotName);
   return value ? value.trim() : null;
-}
-
-function slotNumber(handlerInput, slotName, fallback) {
-  const raw = slotValue(handlerInput, slotName);
-  const n = raw != null ? Number(raw) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 // Alexa hands back whatever the caller actually said (e.g. "pound" or
@@ -147,228 +142,152 @@ const WakeUpIntentHandler = {
   }
 };
 
-const AddToShoppingListIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'AddToShoppingListIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const itemName = slotValue(handlerInput, 'ItemName');
-    if (!itemName) {
-      const speakOutput = "Sorry, I didn't catch what to add. What would you like to add to your shopping list?";
-      return respond(handlerInput, speakOutput, speakOutput);
+// Runs the one action Claude decided on, against the same REST API the old
+// slot-based handlers used, and composes the spoken confirmation. Kept as a
+// second step (not folded into the LLM call) so confirmations are
+// deterministic and don't cost a second round-trip to Claude.
+async function executeToolUse(name, input) {
+  switch (name) {
+    case 'add_to_shopping_list': {
+      const quantity = input.quantity ?? 1;
+      const unit = input.unit || 'item';
+      await apiClient.addShoppingListItem({ name: input.name, quantity, unit, source: 'manual' });
+      return `I added ${describeQuantity(quantity, unit, input.name)} to your shopping list.`;
     }
 
-    const quantity = slotNumber(handlerInput, 'Quantity', 1);
-    const unit = slotValue(handlerInput, 'Unit') || 'item';
-
-    await apiClient.addShoppingListItem({ name: itemName, quantity, unit, source: 'manual' });
-
-    const speakOutput = `I added ${describeQuantity(quantity, unit, itemName)} to your shopping list.`;
-    return respond(handlerInput, speakOutput);
-  }
-};
-
-const ReadShoppingListIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'ReadShoppingListIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const list = await apiClient.listShoppingList(false);
-
-    if (list.length === 0) {
-      return respond(handlerInput, 'Your shopping list is empty.');
+    case 'remove_from_shopping_list': {
+      const matches = await apiClient.findShoppingListItem(input.name);
+      if (matches.length === 0) return `I couldn't find ${input.name} on your shopping list.`;
+      await apiClient.removeShoppingListItem(matches[0].id);
+      return `I removed ${input.name} from your shopping list.`;
     }
 
-    const MAX_SPOKEN = 15;
-    const spokenItems = list
-      .slice(0, MAX_SPOKEN)
-      .map((i) => describeQuantity(i.quantity, i.unit, i.name))
-      .join(', ');
-    const remainder = list.length - MAX_SPOKEN;
-
-    const speakOutput =
-      `You have ${list.length} ${list.length === 1 ? 'item' : 'items'} on your shopping list: ` +
-      `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`;
-
-    return respond(handlerInput, speakOutput);
-  }
-};
-
-const RemoveFromShoppingListIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'RemoveFromShoppingListIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const itemName = slotValue(handlerInput, 'ItemName');
-    if (!itemName) {
-      const speakOutput = "Sorry, which item should I remove from your shopping list?";
-      return respond(handlerInput, speakOutput, speakOutput);
-    }
-
-    const matches = await apiClient.findShoppingListItem(itemName);
-    if (matches.length === 0) {
-      return respond(handlerInput, `I couldn't find ${itemName} on your shopping list.`);
-    }
-
-    await apiClient.removeShoppingListItem(matches[0].id);
-    return respond(handlerInput, `I removed ${itemName} from your shopping list.`);
-  }
-};
-
-const ClearShoppingListIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'ClearShoppingListIntent'
-    );
-  },
-  async handle(handlerInput) {
-    await apiClient.clearCheckedItems();
-    return respond(handlerInput, "I've cleared the checked-off items from your shopping list.");
-  }
-};
-
-const CheckInventoryIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'CheckInventoryIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const itemName = slotValue(handlerInput, 'ItemName');
-    if (!itemName) {
-      const speakOutput = 'Sorry, what item did you want to check?';
-      return respond(handlerInput, speakOutput, speakOutput);
-    }
-
-    const matches = await apiClient.lookupInventory(itemName);
-    if (matches.length === 0) {
-      return respond(handlerInput, `You don't have any ${itemName} in your inventory.`);
-    }
-
-    const byLocation = matches
-      .map((i) => `${i.quantity} ${pluralize(i.quantity, i.unit)} in the ${i.location}`)
-      .join(', and ');
-
-    return respond(handlerInput, `You have ${byLocation}.`);
-  }
-};
-
-const AddInventoryItemIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'AddInventoryItemIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const itemName = slotValue(handlerInput, 'ItemName');
-    if (!itemName) {
-      const speakOutput = 'Sorry, what item did you want to add to your inventory?';
-      return respond(handlerInput, speakOutput, speakOutput);
-    }
-
-    const quantity = slotNumber(handlerInput, 'Quantity', 1);
-    const unit = slotValue(handlerInput, 'Unit') || 'item';
-    const location = slotValue(handlerInput, 'Location') || 'Pantry';
-
-    await apiClient.createInventoryItem({ name: itemName, quantity, unit, location });
-
-    const locationNote = slotValue(handlerInput, 'Location')
-      ? ''
-      : " I put it in the pantry since you didn't say where - you can move it in the app.";
-    const speakOutput = `Got it, added ${describeQuantity(quantity, unit, itemName)} to the ${location}.${locationNote}`;
-
-    return respond(handlerInput, speakOutput);
-  }
-};
-
-const UseInventoryItemIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'UseInventoryItemIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const itemName = slotValue(handlerInput, 'ItemName');
-    if (!itemName) {
-      const speakOutput = 'Sorry, which item did you use?';
-      return respond(handlerInput, speakOutput, speakOutput);
-    }
-
-    const matches = await apiClient.lookupInventory(itemName);
-    if (matches.length === 0) {
-      return respond(handlerInput, `I couldn't find ${itemName} in your inventory.`);
-    }
-
-    // If it's stocked in more than one place, take it from wherever there's
-    // the most of it - a reasonable guess without asking a follow-up question.
-    const target = matches.reduce((a, b) => (b.quantity > a.quantity ? b : a));
-    const quantity = slotNumber(handlerInput, 'Quantity', 1);
-
-    const updated = await apiClient.adjustInventoryItem(target.id, -quantity);
-
-    const speakOutput =
-      updated.quantity === 0
-        ? `Okay, you're all out of ${itemName} now.`
-        : `Okay, you have ${updated.quantity} ${pluralize(updated.quantity, updated.unit)} of ${itemName} left in the ${updated.location}.`;
-
-    return respond(handlerInput, speakOutput);
-  }
-};
-
-const GenerateShoppingListFromMenuIntentHandler = {
-  canHandle(handlerInput) {
-    return (
-      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      Alexa.getIntentName(handlerInput.requestEnvelope) === 'GenerateShoppingListFromMenuIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const recipeName = slotValue(handlerInput, 'RecipeName');
-    if (!recipeName) {
-      const speakOutput = 'Sorry, what recipe are you planning to make?';
-      return respond(handlerInput, speakOutput, speakOutput);
-    }
-
-    const matches = await apiClient.lookupRecipe(recipeName);
-    if (matches.length === 0) {
-      return respond(
-        handlerInput,
-        `I couldn't find a recipe called ${recipeName}. You can add recipes from the Home Inventory website.`
+    case 'read_shopping_list': {
+      const list = await apiClient.listShoppingList(false);
+      if (list.length === 0) return 'Your shopping list is empty.';
+      const MAX_SPOKEN = 15;
+      const spokenItems = list
+        .slice(0, MAX_SPOKEN)
+        .map((i) => describeQuantity(i.quantity, i.unit, i.name))
+        .join(', ');
+      const remainder = list.length - MAX_SPOKEN;
+      return (
+        `You have ${list.length} ${list.length === 1 ? 'item' : 'items'} on your shopping list: ` +
+        `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`
       );
     }
 
-    const recipe = matches[0];
-    const result = await apiClient.submitMenu([recipe.id]);
-
-    if (result.added.length === 0) {
-      return respond(handlerInput, `Good news - you already have everything you need for ${recipe.name}.`);
+    case 'clear_checked_items': {
+      await apiClient.clearCheckedItems();
+      return "I've cleared the checked-off items from your shopping list.";
     }
 
-    const MAX_SPOKEN = 12;
-    const spokenItems = result.added
-      .slice(0, MAX_SPOKEN)
-      .map((i) => `${i.quantity} ${pluralize(i.quantity, i.unit)} of ${i.name}`)
-      .join(', ');
-    const remainder = result.added.length - MAX_SPOKEN;
+    case 'check_inventory': {
+      const matches = await apiClient.lookupInventory(input.name);
+      if (matches.length === 0) return `You don't have any ${input.name} in your inventory.`;
+      const byLocation = matches
+        .map((i) => `${i.quantity} ${pluralize(i.quantity, i.unit)} in the ${i.location}`)
+        .join(', and ');
+      return `You have ${byLocation}.`;
+    }
 
-    const speakOutput =
-      `I added what you're missing for ${recipe.name} to your shopping list: ` +
-      `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`;
+    case 'add_inventory_item': {
+      const quantity = input.quantity ?? 1;
+      const unit = input.unit || 'item';
+      const location = input.location || 'Pantry';
+      await apiClient.createInventoryItem({ name: input.name, quantity, unit, location });
+      const locationNote = input.location
+        ? ''
+        : " I put it in the pantry since you didn't say where - you can move it in the app.";
+      return `Got it, added ${describeQuantity(quantity, unit, input.name)} to the ${location}.${locationNote}`;
+    }
 
-    return respond(handlerInput, speakOutput);
+    case 'use_inventory_item': {
+      const matches = await apiClient.lookupInventory(input.name);
+      if (matches.length === 0) return `I couldn't find ${input.name} in your inventory.`;
+      // If it's stocked in more than one place, take it from wherever
+      // there's the most of it - a reasonable guess without a follow-up.
+      const target = matches.reduce((a, b) => (b.quantity > a.quantity ? b : a));
+      const quantity = input.quantity ?? 1;
+      const updated = await apiClient.adjustInventoryItem(target.id, -quantity);
+      return updated.quantity === 0
+        ? `Okay, you're all out of ${input.name} now.`
+        : `Okay, you have ${updated.quantity} ${pluralize(updated.quantity, updated.unit)} of ${input.name} left in the ${updated.location}.`;
+    }
+
+    case 'build_shopping_list_from_recipe': {
+      const matches = await apiClient.lookupRecipe(input.recipe_name);
+      if (matches.length === 0) {
+        return `I couldn't find a recipe called ${input.recipe_name}. You can add recipes from the Home Inventory website.`;
+      }
+      const recipe = matches[0];
+      const result = await apiClient.submitMenu([recipe.id]);
+      if (result.added.length === 0) {
+        return `Good news - you already have everything you need for ${recipe.name}.`;
+      }
+      const MAX_SPOKEN = 12;
+      const spokenItems = result.added
+        .slice(0, MAX_SPOKEN)
+        .map((i) => `${i.quantity} ${pluralize(i.quantity, i.unit)} of ${i.name}`)
+        .join(', ');
+      const remainder = result.added.length - MAX_SPOKEN;
+      return (
+        `I added what you're missing for ${recipe.name} to your shopping list: ` +
+        `${spokenItems}${remainder > 0 ? `, and ${remainder} more` : ''}.`
+      );
+    }
+
+    default:
+      // Shouldn't happen - Claude can only call a tool from the list it was
+      // given - but fail safely rather than crash into the ErrorHandler.
+      return "Sorry, I'm not sure how to do that. Could you try rephrasing it?";
+  }
+}
+
+// Catches whatever Alexa transcribed, verbatim (see interactionModels'
+// NaturalLanguageIntent - a single AMAZON.SearchQuery slot with no carrier
+// words), and hands it to Claude to figure out. This replaced eight
+// separate slot-grammar intents that kept mis-hearing perfectly reasonable
+// phrasings ("add hot dogs to freezer" without "the", items outside a fixed
+// vocabulary list, ...) - Claude's language understanding doesn't need any
+// of that tuning.
+const NaturalLanguageIntentHandler = {
+  canHandle(handlerInput) {
+    return (
+      Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
+      Alexa.getIntentName(handlerInput.requestEnvelope) === 'NaturalLanguageIntent'
+    );
+  },
+  async handle(handlerInput) {
+    const rawText = slotValue(handlerInput, 'RawText');
+    if (!rawText) {
+      const speakOutput = "Sorry, I didn't catch that - what would you like to do?";
+      return respond(handlerInput, speakOutput, speakOutput);
+    }
+
+    // A short rolling history (capped in lib/llm.js) rides in session
+    // attributes so a clarifying question ("did you mean the fridge or the
+    // freezer?") and the person's answer stay connected to the original
+    // request, without re-sending the whole conversation from scratch.
+    const attributesManager = handlerInput.attributesManager;
+    const sessionAttributes = attributesManager.getSessionAttributes();
+
+    const { toolUse, clarification, history } = await interpretUtterance(
+      rawText,
+      sessionAttributes.llmHistory || []
+    );
+
+    sessionAttributes.llmHistory = history;
+    attributesManager.setSessionAttributes(sessionAttributes);
+
+    if (toolUse) {
+      const speakOutput = await executeToolUse(toolUse.name, toolUse.input);
+      return respond(handlerInput, speakOutput);
+    }
+
+    // Claude asked for clarification instead of acting - speak it and keep
+    // listening for the answer.
+    return respond(handlerInput, clarification, clarification);
   }
 };
 
@@ -381,12 +300,12 @@ const HelpIntentHandler = {
   },
   handle(handlerInput) {
     const speakOutput =
-      "Here's what you can ask me: 'add milk to my shopping list', " +
-      "'what's on my shopping list', 'how much chicken do I have', " +
-      "'I bought two pounds of ground beef', 'we're out of eggs', " +
-      "'I'm planning to cook spaghetti bolognese' to build a shopping list " +
-      "from a recipe, or 'wake up' if the server's been asleep and you want " +
-      "to warm it up before asking for anything else.";
+      "Just tell me what you want in plain English - things like 'add milk " +
+      "to my shopping list', 'how much chicken do I have', 'I bought two " +
+      "pounds of ground beef', 'we're out of eggs', or 'I'm planning to " +
+      "cook spaghetti bolognese' to build a shopping list from a recipe. " +
+      "Say 'wake up' if the server's been asleep and you want to warm it up " +
+      "before asking for anything else.";
     return respond(handlerInput, speakOutput, speakOutput);
   }
 };
@@ -412,9 +331,12 @@ const FallbackIntentHandler = {
     );
   },
   handle(handlerInput) {
+    // With NaturalLanguageIntent catching almost any utterance, Alexa's own
+    // fallback is rare in practice - it means the platform couldn't match
+    // *any* intent at all, not that Claude failed to understand something.
     const speakOutput =
-      "Sorry, I didn't understand that. You can ask what's on your shopping list, " +
-      'add an item, or check what you have in stock.';
+      "Sorry, I didn't catch that at all. Try telling me what you want in " +
+      'plain English, like "add milk to my shopping list."';
     return respond(handlerInput, speakOutput, speakOutput);
   }
 };
@@ -444,14 +366,7 @@ exports.handler = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
     WakeUpIntentHandler,
-    AddToShoppingListIntentHandler,
-    ReadShoppingListIntentHandler,
-    RemoveFromShoppingListIntentHandler,
-    ClearShoppingListIntentHandler,
-    CheckInventoryIntentHandler,
-    AddInventoryItemIntentHandler,
-    UseInventoryItemIntentHandler,
-    GenerateShoppingListFromMenuIntentHandler,
+    NaturalLanguageIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
     FallbackIntentHandler,
