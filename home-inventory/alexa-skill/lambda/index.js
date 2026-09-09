@@ -115,10 +115,9 @@ const LaunchRequestHandler = {
     await pingHealth(2500);
 
     const speakOutput =
-      `Welcome to ${SKILL_NAME}. You can ask what's on your shopping list, ` +
-      "add or remove items, check what's in your pantry or freezer, or say " +
-      "you're planning to cook a recipe to build a shopping list for it. " +
-      'What would you like to do?';
+      `Welcome to ${SKILL_NAME}. Just start with the word "to" and tell me ` +
+      'what you want - like "to add milk to my shopping list" or "to check ' +
+      'what\'s in the freezer." What would you like to do?';
     return respond(handlerInput, speakOutput, speakOutput);
   }
 };
@@ -244,9 +243,11 @@ async function executeToolUse(name, input) {
   }
 }
 
-// Catches whatever Alexa transcribed, verbatim (see interactionModels'
-// NaturalLanguageIntent - a single AMAZON.SearchQuery slot with no carrier
-// words), and hands it to Claude to figure out. This replaced eight
+// Catches whatever Alexa transcribed after a required leading "to"/"for"
+// (see interactionModels' NaturalLanguageIntent - a single
+// AMAZON.SearchQuery slot; Amazon rejects a sample utterance that's only a
+// slot, so that carrier word is unavoidable, but everything past it is
+// free-form), and hands it to Claude to figure out. This replaced eight
 // separate slot-grammar intents that kept mis-hearing perfectly reasonable
 // phrasings ("add hot dogs to freezer" without "the", items outside a fixed
 // vocabulary list, ...) - Claude's language understanding doesn't need any
@@ -300,12 +301,12 @@ const HelpIntentHandler = {
   },
   handle(handlerInput) {
     const speakOutput =
-      "Just tell me what you want in plain English - things like 'add milk " +
-      "to my shopping list', 'how much chicken do I have', 'I bought two " +
-      "pounds of ground beef', 'we're out of eggs', or 'I'm planning to " +
-      "cook spaghetti bolognese' to build a shopping list from a recipe. " +
-      "Say 'wake up' if the server's been asleep and you want to warm it up " +
-      "before asking for anything else.";
+      "Just start with the word 'to' and tell me what you want in plain " +
+      "English - things like 'to add milk to my shopping list', 'to check " +
+      "how much chicken I have', 'to add two pounds of ground beef to the " +
+      "freezer', 'to mark that we're out of eggs', or 'to build a shopping " +
+      "list for spaghetti bolognese.' Say 'wake up' if the server's been " +
+      "asleep and you want to warm it up before asking for anything else.";
     return respond(handlerInput, speakOutput, speakOutput);
   }
 };
@@ -331,12 +332,13 @@ const FallbackIntentHandler = {
     );
   },
   handle(handlerInput) {
-    // With NaturalLanguageIntent catching almost any utterance, Alexa's own
-    // fallback is rare in practice - it means the platform couldn't match
-    // *any* intent at all, not that Claude failed to understand something.
+    // NaturalLanguageIntent requires a leading "to"/"for" (Amazon rejects a
+    // sample utterance that's only a slot), so this fires whenever that
+    // word is missing, not just on genuinely un-parseable input - the most
+    // likely real cause, so lead with it.
     const speakOutput =
-      "Sorry, I didn't catch that at all. Try telling me what you want in " +
-      'plain English, like "add milk to my shopping list."';
+      "Sorry, I didn't catch that - remember to start with the word \"to,\" " +
+      'like "to add milk to my shopping list."';
     return respond(handlerInput, speakOutput, speakOutput);
   }
 };

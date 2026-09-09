@@ -45,6 +45,17 @@ the backend call takes - worth knowing since Alexa only waits about 8
 seconds total for a response, on top of any Render cold-start delay (see
 **Architecture** below).
 
+**Every single command has to start with the word "to"** (e.g. "to add
+milk"), including follow-ups in an already-open conversation - not just the
+first thing you say. This isn't a stylistic choice; Amazon's platform
+flatly rejects a sample utterance that's nothing but a slot ("must include a
+carrier phrase"), so a fixed leading word is unavoidable for capturing
+free-form speech this way. "to" was picked because it reads naturally after
+"tell shopping assistant" ("tell shopping assistant **to** add milk"); "for"
+also works (`for {RawText}` is declared too) if you prefer "ask shopping
+assistant **for** ..." phrasing. Forgetting it - saying bare "add milk"
+instead of "to add milk" - won't reach the skill at all.
+
 ## What it can do
 
 Say it in plain English - there's no fixed phrasing to match anymore.
@@ -52,14 +63,14 @@ Examples:
 
 | Say something like...                                              | Does |
 |-----------------------------------------------------------------------|------|
-| "Alexa, ask shopping assistant what's on my shopping list"                  | Reads your unchecked shopping list items |
+| "Alexa, tell shopping assistant to check what's on my shopping list"        | Reads your unchecked shopping list items |
 | "Alexa, tell shopping assistant to add milk to my shopping list"            | Adds an item on demand |
 | "Alexa, tell shopping assistant to remove milk from my shopping list"       | Removes an item |
 | "Alexa, tell shopping assistant to clear my shopping list"                  | Clears items already checked off |
-| "Alexa, ask shopping assistant how much chicken I have"                     | Reads back inventory quantities/locations |
-| "Alexa, tell shopping assistant I bought two pounds of ground beef"         | Adds/increments inventory (defaults to Pantry if no location given) |
-| "Alexa, tell shopping assistant we're out of eggs"                          | Decrements inventory |
-| "Alexa, tell shopping assistant I'm planning to cook spaghetti bolognese"   | Looks up that recipe and adds whatever ingredients you're missing to the shopping list |
+| "Alexa, tell shopping assistant to check how much chicken I have"           | Reads back inventory quantities/locations |
+| "Alexa, tell shopping assistant to add two pounds of ground beef to the freezer" | Adds/increments inventory (defaults to Pantry if no location given) |
+| "Alexa, tell shopping assistant to mark that we're out of eggs"             | Decrements inventory |
+| "Alexa, tell shopping assistant to build a shopping list for spaghetti bolognese" | Looks up that recipe and adds whatever ingredients you're missing to the shopping list |
 
 Run `Alexa, open shopping assistant` for the welcome message, or `Alexa, ask
 shopping assistant for help` any time for a spoken list of things you can
@@ -67,9 +78,10 @@ say.
 
 **The session stays open between commands** - every response ends with a
 follow-up prompt (e.g. "anything else?") instead of closing, so you can keep
-going without saying "Alexa, tell shopping assistant" again each time: "add
-milk"... *(pause)* ..."add eggs"... *(pause)* ..."what's on my list". Say
-"stop" or "cancel", or just stay quiet, to end the conversation.
+going without saying "Alexa, tell shopping assistant" again each time - but
+each follow-up still needs its own leading "to" (see above): "to add
+milk"... *(pause)* ..."to add eggs"... *(pause)* ..."to check what's on my
+list". Say "stop" or "cancel", or just stay quiet, to end the conversation.
 
 ## Architecture
 
@@ -147,11 +159,16 @@ and paste the ARN from step 2. Save.
 Use the **Test** tab in the developer console (enable testing for
 "Development"), or just talk to any Echo device signed into the same Amazon
 account used to build the skill - it shows up automatically without needing
-to publish it. Try: *"Alexa, ask shopping assistant what's on my shopping list"*
-(see the note on launch phrasing below - lead with "ask"/"tell", not "open").
+to publish it. Try: *"Alexa, tell shopping assistant to check what's on my
+shopping list"* (see the notes below - lead with "ask"/"tell", not "open",
+and the command itself must start with "to"/"for").
 
 ## Known limitations (v1)
 
+- **Every command must start with "to" (or "for")** - a hard Amazon
+  platform requirement, not a design choice; see **How it understands you**
+  above for why. This applies to follow-ups in an open conversation too,
+  not just the first thing you say.
 - **LLM latency stacks with backend cold-start latency.** Each command now
   costs one call to Claude (typically well under a second for Haiku 4.5, but
   not guaranteed) *in addition to* whatever the backend call takes. If the

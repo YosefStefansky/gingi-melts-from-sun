@@ -42,7 +42,8 @@
             { "name": "RawText", "type": "AMAZON.SearchQuery" }
           ],
           "samples": [
-            "{RawText}"
+            "to {RawText}",
+            "for {RawText}"
           ]
         }
       ],

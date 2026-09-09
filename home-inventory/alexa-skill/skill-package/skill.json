@@ -7,9 +7,9 @@
           "summary": "Check what's in your fridge, freezer and pantry, and manage your shopping list by voice.",
           "description": "Home Pantry connects to your household's own Home Inventory app. Ask what you have in stock, add or remove items from your shopping list, log what you bought or used, and turn a planned menu into a shopping list for whatever you're missing.",
           "examplePhrases": [
-            "Alexa, ask shopping assistant what's on my shopping list",
+            "Alexa, tell shopping assistant to check what's on my shopping list",
             "Alexa, tell shopping assistant to add milk to my shopping list",
-            "Alexa, ask shopping assistant how much chicken I have"
+            "Alexa, tell shopping assistant to check how much chicken I have"
           ],
           "keywords": ["shopping list", "inventory", "pantry", "groceries", "kitchen"]
         }
